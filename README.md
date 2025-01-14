@@ -9,9 +9,9 @@
 - 📱 **User-friendly Interface**: Clean and intuitive design to make managing money simple.
 
 ## Technologies Used
-- **Frontend**: React (or mention tech stack if different)
-- **Backend**: Node.js, Express (if applicable)
-- **Database**: MongoDB, Firebase, etc. (if applicable)
+- **Frontend**: React Native
+- **Backend**: Node.js, Express
+- **Database**: Nil
 - **Version Control**: GitHub for version management
 
 
