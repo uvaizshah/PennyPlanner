@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'setuppin.dart'; // Import the SetupPin screen
+import 'signup.dart'; // Import SignUpScreen instead of SetupPin
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -41,10 +41,10 @@ class SplashScreen extends StatelessWidget {
               // Let's Go Button
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to SetupPin page
+                  // Navigate to SignUp page instead of SetupPin
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SetupPin()),
+                    MaterialPageRoute(builder: (context) => const SignUpScreen()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

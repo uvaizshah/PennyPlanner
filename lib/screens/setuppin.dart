@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pin.dart'; // Import the Pin page
+import 'pin.dart'; // Import Pin page
 
 class SetupPin extends StatelessWidget {
   const SetupPin({super.key});
@@ -15,12 +15,12 @@ class SetupPin extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo Icon
-              Icon(Icons.show_chart, color: Color(0xFFE91E63), size: 60.0),
+              const Icon(Icons.show_chart, color: Color(0xFFE91E63), size: 60.0),
 
               const SizedBox(height: 16.0),
 
               // App Name
-              Text(
+              const Text(
                 'PennyPlanner',
                 style: TextStyle(
                   color: Color(0xFFE91E63),
@@ -39,17 +39,16 @@ class SetupPin extends StatelessWidget {
 
               const SizedBox(height: 48.0),
 
-              // Setup Pin Button
+              // Setup Pin Button (Now Goes to PIN Entry First)
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to Pin page
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const Pin()),
+                    MaterialPageRoute(builder: (context) => const Pin()), // First go to PIN entry
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFE91E63),
+                  backgroundColor: const Color(0xFFE91E63),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 48.0,
@@ -60,7 +59,7 @@ class SetupPin extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Setup Pin',
+                  'Setup PIN',
                   style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w500),
                 ),
               ),

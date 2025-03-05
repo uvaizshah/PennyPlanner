@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'homescreen.dart'; // Import Home Screen
 
 class Pin extends StatefulWidget {
   const Pin({super.key});
@@ -100,18 +101,29 @@ class _PinState extends State<Pin> {
 
                 // Next Button
                 ElevatedButton(
-                  onPressed:
-                      isPinComplete
-                          ? () {
-                            print('PIN entered: ${_pinController.text}');
-                            // Navigate or validate the PIN as needed.
-                          }
-                          : null,
+                  onPressed: isPinComplete
+                      ? () {
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("PIN setup successful!"),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+
+                          // Navigate to Home Screen after 2 seconds
+                          Future.delayed(const Duration(seconds: 2), () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const HomeScreen()),
+                            );
+                          });
+                        }
+                      : null, // Disable button if PIN is incomplete
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        isPinComplete
-                            ? const Color(0xFFE91E63)
-                            : Colors.grey[400],
+                        isPinComplete ? const Color(0xFFE91E63) : Colors.grey[400],
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 48.0,
