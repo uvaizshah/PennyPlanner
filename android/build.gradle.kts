@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()  // ✅ This is required for Firebase plugins
+        mavenCentral()
+    }
+    
+    dependencies {
+        classpath("com.google.gms:google-services:4.4.0") // ✅ Ensure Firebase works
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -12,6 +23,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

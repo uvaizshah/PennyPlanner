@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "430244093267",
+    "project_id": "penny-planner-30cf9",
+    "storage_bucket": "penny-planner-30cf9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:430244093267:android:5cb89052ec3ec06118d5a6",
+        "android_client_info": {
+          "package_name": "com.example.penny_planner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPxCo5CNqCR739dFNkDqYhSzDvKWxglSc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'setuppin.dart'; // Navigate to PIN setup after signing up
+import 'setup_page1.dart'; // Navigate to Setup Page 1 after signing up
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -117,11 +117,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: ElevatedButton(
                   onPressed: isFormComplete
                       ? () {
-                          // Navigate to PIN Setup Screen after signing up
+                          // Navigate to Setup Page 1 after signing up
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SetupPin(),
+                              builder: (context) => SetupPage1(),
                             ),
                           );
                         }
