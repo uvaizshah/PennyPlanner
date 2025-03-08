@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'signup.dart'; // Import SignUpScreen instead of SetupPin
+import 'package:google_fonts/google_fonts.dart';
+import 'signup.dart'; // Import SignUpScreen
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -13,15 +14,19 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Icon
-              Icon(Icons.show_chart, color: Colors.white, size: 60.0),
+              // Logo
+              Image.asset(
+                'assets/images/ppWhiteLogo.png', // White logo
+                height: 110.0, // Increased by 10%
+                width: 110.0,  // Increased by 10%
+              ),
 
-              const SizedBox(height: 16.0),
+              const SizedBox(height: 8.0), // Reduced space
 
               // App Name
-              const Text(
+              Text(
                 'PennyPlanner',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 32.0,
                   fontWeight: FontWeight.bold,
@@ -31,9 +36,13 @@ class SplashScreen extends StatelessWidget {
               const SizedBox(height: 8.0),
 
               // Tagline
-              const Text(
+              Text(
                 'Your personal finance manager',
-                style: TextStyle(color: Colors.white, fontSize: 16.0),
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
 
               const SizedBox(height: 48.0),
@@ -41,7 +50,7 @@ class SplashScreen extends StatelessWidget {
               // Let's Go Button
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to SignUp page instead of SetupPin
+                  // Navigate to SignUp page
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const SignUpScreen()),
@@ -49,7 +58,7 @@ class SplashScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
-                  foregroundColor: Color(0xFFE91E63),
+                  foregroundColor: const Color(0xFFE91E63),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 48.0,
                     vertical: 16.0,
@@ -57,10 +66,16 @@ class SplashScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25.0),
                   ),
+                  elevation: 6,
+                  shadowColor: Colors.black.withOpacity(0.3),
                 ),
-                child: const Text(
+                child: Text(
                   "Let's Go",
-                  style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFE91E63),
+                  ),
                 ),
               ),
             ],

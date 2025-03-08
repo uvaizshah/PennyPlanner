@@ -20,7 +20,7 @@ dependencies:
 
   # Animation and 3D
   rive: ^0.13.3  # 3D animations
-  lottie: ^2.7.0  # JSON-based animations for UI enhancements
+  lottie: ^3.3.1  # Updated to latest version for JSON-based animations
 
   # Firebase Dependencies
   firebase_core: ^3.12.1
@@ -40,6 +40,8 @@ flutter:
     - assets/animations/  # Folder for multiple animations
     - assets/animations/setup_intro.json  # Explicitly list animation for Setup Page 1
     - assets/animations/Piggy Bank.json  # Explicitly list Piggy Bank animation for Setup Page 2
+    - assets/images/ppPinkLogo.png
+    - assets/images/ppWhiteLogo.png  # Added new logo
 
   fonts:
     - family: Poppins
