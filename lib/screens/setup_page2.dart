@@ -146,12 +146,12 @@ class _SetupPage2State extends State<SetupPage2> {
                             TextField(
                               controller: incomeSourceControllers[index],
                               decoration: InputDecoration(
-                                hintText: "Enter source name (e.g., Salary)",
+                                hintText: "Enter Source Name", // Updated hint text
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                prefixIcon: const Padding(
-                                  padding: EdgeInsets.only(left: 12, right: 8),
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.only(left: 12, right: 8, top: 4), // Added top padding to move emoji down
                                   child: Text(
                                     "💰",
                                     style: TextStyle(fontSize: 20),
