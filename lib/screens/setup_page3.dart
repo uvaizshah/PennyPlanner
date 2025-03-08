@@ -118,27 +118,24 @@ class _SetupPage3State extends State<SetupPage3> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // **Back Button**
-                  TextButton(
+                  OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.grey),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF6B7280)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                     ),
-                    child: const Text(
-                      "← Back",
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    child: Text(
+                      "Back",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: const Color(0xFF6B7280),
+                      ),
                     ),
                   ),
 
                   // **Next Button**
                   ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE91E63), // Pink like SetupPage2
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
                     onPressed: () {
                       double savingsAmount = double.tryParse(_savingsController.text) ?? 0.0;
                       Navigator.push(
@@ -151,9 +148,20 @@ class _SetupPage3State extends State<SetupPage3> {
                         ),
                       );
                     },
-                    child: const Text(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE91E63),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                      elevation: 6,
+                      shadowColor: const Color(0xFFE91E63).withOpacity(0.4),
+                    ),
+                    child: Text(
                       "Next",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],
