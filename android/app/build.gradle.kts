@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") // Firebase Plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -50,16 +50,16 @@ dependencies {
     implementation("com.google.android.material:material:1.10.0")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.24")
+    implementation(platform("com.google.firebase:firebase-bom:33.2.0")) // Correct Kotlin DSL syntax
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs += "-Xlint:-options"  // Suppress Kotlin warnings about obsolete options
+        freeCompilerArgs += "-Xlint:-options"
     }
 }
 
-// Add this to suppress Java compiler warnings about obsolete source/target options
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-Xlint:-options")
 }

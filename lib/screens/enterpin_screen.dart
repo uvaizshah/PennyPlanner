@@ -7,16 +7,15 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import 'homescreen.dart';
 
-class Pin extends StatefulWidget {
-  const Pin({super.key});
+class EnterPinScreen extends StatefulWidget {
+  const EnterPinScreen({super.key});
 
   @override
-  State<Pin> createState() => _PinState();
+  State<EnterPinScreen> createState() => _EnterPinScreenState();
 }
 
-class _PinState extends State<Pin> {
+class _EnterPinScreenState extends State<EnterPinScreen> {
   final TextEditingController _pinController = TextEditingController();
-  final TextEditingController _confirmPinController = TextEditingController();
   String? errorMessage;
 
   @override
@@ -25,15 +24,11 @@ class _PinState extends State<Pin> {
     _pinController.addListener(() {
       setState(() {}); // Update UI when the PIN changes
     });
-    _confirmPinController.addListener(() {
-      setState(() {}); // Update UI when the confirm PIN changes
-    });
   }
 
   @override
   void dispose() {
     _pinController.dispose();
-    _confirmPinController.dispose();
     super.dispose();
   }
 
@@ -43,21 +38,14 @@ class _PinState extends State<Pin> {
     return digest.toString();
   }
 
-  Future<void> _storePin() async {
+  Future<void> _verifyPin() async {
     setState(() {
       errorMessage = null;
     });
 
-    if (_pinController.text.length != 4 || _confirmPinController.text.length != 4) {
+    if (_pinController.text.length != 4) {
       setState(() {
-        errorMessage = "Both PINs must be exactly 4 digits.";
-      });
-      return;
-    }
-
-    if (_pinController.text != _confirmPinController.text) {
-      setState(() {
-        errorMessage = "PINs do not match. Please try again.";
+        errorMessage = "PIN must be exactly 4 digits.";
       });
       return;
     }
@@ -66,42 +54,53 @@ class _PinState extends State<Pin> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("No user logged in");
 
-      String hashedPin = _hashPin(_pinController.text);
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'pin': hashedPin,
-        'updatedAt': Timestamp.now(),
-      });
+      if (!userDoc.exists || userDoc['pin'] == null) {
+        throw Exception("No PIN set for this account.");
+      }
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "PIN set successfully!",
-            style: GoogleFonts.poppins(color: Colors.white),
+      String storedHashedPin = userDoc['pin'];
+      String enteredHashedPin = _hashPin(_pinController.text);
+
+      if (storedHashedPin == enteredHashedPin) {
+        // PIN is correct
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "PIN verified successfully!",
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFFE91E63),
+            duration: const Duration(seconds: 2),
           ),
-          backgroundColor: const Color(0xFFE91E63),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      // Navigate to Home Screen after 2 seconds
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
-      });
+
+        // Navigate to HomeScreen after 2 seconds
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        });
+      } else {
+        setState(() {
+          errorMessage = "Incorrect PIN. Please try again.";
+        });
+      }
     } catch (e) {
       setState(() {
-        errorMessage = "Error saving PIN: $e";
+        errorMessage = "Error verifying PIN: $e";
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isPinComplete = _pinController.text.length == 4 && _confirmPinController.text.length == 4;
+    bool isPinComplete = _pinController.text.length == 4;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -140,7 +139,7 @@ class _PinState extends State<Pin> {
                     child: Text(
                       'PennyPlanner',
                       style: GoogleFonts.poppins(
-                        fontSize: 28.0,
+                        fontSize: 32.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -151,7 +150,7 @@ class _PinState extends State<Pin> {
 
                   // Tagline
                   Text(
-                    'Set your 4-digit PIN',
+                    'Enter your 4-digit PIN',
                     style: GoogleFonts.poppins(
                       color: Colors.grey[600],
                       fontSize: 16.0,
@@ -198,46 +197,6 @@ class _PinState extends State<Pin> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-
-                  // Confirm PIN Input
-                  Container(
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          spreadRadius: 2,
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: _confirmPinController,
-                        keyboardType: TextInputType.number,
-                        maxLength: 4,
-                        obscureText: true,
-                        textAlign: TextAlign.center,
-                        decoration: const InputDecoration(
-                          counterText: '',
-                          hintText: '••••',
-                          border: InputBorder.none,
-                        ),
-                        style: GoogleFonts.poppins(
-                          color: const Color(0xFFE91E63),
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 8,
-                        ),
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 30.0),
 
                   // Error Message
@@ -253,9 +212,9 @@ class _PinState extends State<Pin> {
                       ),
                     ),
 
-                  // Set PIN Button
+                  // Verify PIN Button
                   ElevatedButton(
-                    onPressed: isPinComplete ? _storePin : null,
+                    onPressed: isPinComplete ? _verifyPin : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           isPinComplete ? const Color(0xFFE91E63) : Colors.grey[400],
@@ -270,7 +229,7 @@ class _PinState extends State<Pin> {
                       elevation: isPinComplete ? 6.0 : 0.0,
                     ),
                     child: Text(
-                      'Set PIN',
+                      'Verify PIN',
                       style: GoogleFonts.poppins(
                         fontSize: 18.0,
                         fontWeight: FontWeight.w500,

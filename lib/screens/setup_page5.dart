@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setuppin.dart';
 
 class SetupPage5 extends StatelessWidget {
@@ -28,10 +30,42 @@ class SetupPage5 extends StatelessWidget {
     required this.other,
   });
 
+  Future<void> _confirmSetup(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("No user logged in");
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'totalIncome': totalIncome,
+        'savingsAmount': savingsAmount,
+        'expenses': {
+          'rent': rent,
+          'food': food,
+          'groceries': groceries,
+          'transport': transport,
+          'healthcare': healthcare,
+          'entertainment': entertainment,
+          'gift': gift,
+          'other': other,
+        },
+        'updatedAt': Timestamp.now(),
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SetupPin()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error confirming setup: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background color
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -39,9 +73,8 @@ class SetupPage5 extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 20), // Space after SafeArea
+                const SizedBox(height: 20),
 
-                // **Title**
                 Text(
                   "Review Your Setup",
                   style: GoogleFonts.poppins(
@@ -54,7 +87,6 @@ class SetupPage5 extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
-                // **Subtitle**
                 Text(
                   "Here’s a summary of your financial setup.",
                   style: GoogleFonts.poppins(
@@ -66,7 +98,6 @@ class SetupPage5 extends StatelessWidget {
 
                 const SizedBox(height: 25),
 
-                // **Summary Card**
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -100,11 +131,9 @@ class SetupPage5 extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // **Navigation Buttons**
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Back Button
                     OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
@@ -122,14 +151,8 @@ class SetupPage5 extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Continue Button
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SetupPin()),
-                        );
-                      },
+                      onPressed: () => _confirmSetup(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE91E63),
                         shape: RoundedRectangleBorder(
@@ -159,7 +182,6 @@ class SetupPage5 extends StatelessWidget {
     );
   }
 
-  // **Reusable Summary Row**
   Widget _buildSummaryRow(String label, double value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

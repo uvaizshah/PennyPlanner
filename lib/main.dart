@@ -4,7 +4,7 @@ import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initialize Firebase
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -15,9 +15,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PennyPlanner',
-      theme: ThemeData(primarySwatch: Colors.pink, fontFamily: 'Roboto'),
+      theme: ThemeData(primarySwatch: Colors.pink), // Removed fontFamily: 'Roboto'
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(), // Starts with SplashScreen
+      home: const SplashScreen(),
     );
   }
 }

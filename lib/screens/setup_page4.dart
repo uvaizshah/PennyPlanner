@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setup_page5.dart';
 
 class SetupPage4 extends StatefulWidget {
@@ -23,6 +25,63 @@ class _SetupPage4State extends State<SetupPage4> {
   final TextEditingController otherController = TextEditingController();
 
   double remainingBalance = 0.0;
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future<void> _saveExpenseData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("No user logged in");
+
+      final expenses = {
+        'rent': double.tryParse(rentController.text) ?? 0.0,
+        'food': double.tryParse(foodController.text) ?? 0.0,
+        'groceries': double.tryParse(groceriesController.text) ?? 0.0,
+        'transport': double.tryParse(transportController.text) ?? 0.0,
+        'healthcare': double.tryParse(healthcareController.text) ?? 0.0,
+        'entertainment': double.tryParse(entertainmentController.text) ?? 0.0,
+        'gift': double.tryParse(giftController.text) ?? 0.0,
+        'other': double.tryParse(otherController.text) ?? 0.0,
+      };
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'expenses': expenses,
+        'remainingBalance': remainingBalance,
+        'updatedAt': Timestamp.now(),
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SetupPage5(
+            totalIncome: widget.totalIncome,
+            savingsAmount: widget.savingsAmount,
+            rent: double.tryParse(rentController.text) ?? 0.0,
+            food: double.tryParse(foodController.text) ?? 0.0,
+            groceries: double.tryParse(groceriesController.text) ?? 0.0,
+            transport: double.tryParse(transportController.text) ?? 0.0,
+            healthcare: double.tryParse(healthcareController.text) ?? 0.0,
+            entertainment: double.tryParse(entertainmentController.text) ?? 0.0,
+            gift: double.tryParse(giftController.text) ?? 0.0,
+            other: double.tryParse(otherController.text) ?? 0.0,
+          ),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error saving data: $e";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -75,18 +134,16 @@ class _SetupPage4State extends State<SetupPage4> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // Soft grey background
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Column(
           children: [
-            // Scrollable content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Title
                     Text(
                       "Almost There!",
                       style: GoogleFonts.poppins(
@@ -98,7 +155,6 @@ class _SetupPage4State extends State<SetupPage4> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Subtitle
                     Text(
                       "Let's set up your expense categories.",
                       style: GoogleFonts.poppins(
@@ -110,7 +166,6 @@ class _SetupPage4State extends State<SetupPage4> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Remaining Balance Indicator
                     Text(
                       "Remaining Balance: ₹${remainingBalance.toStringAsFixed(2)}",
                       style: GoogleFonts.poppins(
@@ -121,7 +176,6 @@ class _SetupPage4State extends State<SetupPage4> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Expense Input Fields
                     _buildExpenseInput("🏠 Rent / Housing", rentController),
                     _buildExpenseInput("🍽️ Food", foodController),
                     _buildExpenseInput("🏪 Groceries", groceriesController),
@@ -135,13 +189,23 @@ class _SetupPage4State extends State<SetupPage4> {
               ),
             ),
 
-            // Fixed Navigation Buttons
+            if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: Text(
+                  errorMessage!,
+                  style: GoogleFonts.poppins(
+                    color: Colors.red,
+                    fontSize: 14.0,
+                  ),
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back Button
                   OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
@@ -149,10 +213,7 @@ class _SetupPage4State extends State<SetupPage4> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
                     ),
                     child: Text(
                       "Back",
@@ -162,47 +223,29 @@ class _SetupPage4State extends State<SetupPage4> {
                       ),
                     ),
                   ),
-                  // Next Button
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SetupPage5(
-                            totalIncome: widget.totalIncome,
-                            savingsAmount: widget.savingsAmount,
-                            rent: double.tryParse(rentController.text) ?? 0.0,
-                            food: double.tryParse(foodController.text) ?? 0.0,
-                            groceries: double.tryParse(groceriesController.text) ?? 0.0,
-                            transport: double.tryParse(transportController.text) ?? 0.0,
-                            healthcare: double.tryParse(healthcareController.text) ?? 0.0,
-                            entertainment: double.tryParse(entertainmentController.text) ?? 0.0,
-                            gift: double.tryParse(giftController.text) ?? 0.0,
-                            other: double.tryParse(otherController.text) ?? 0.0,
+                  isLoading
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                        )
+                      : ElevatedButton(
+                          onPressed: _saveExpenseData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE91E63),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            elevation: 6,
+                          ),
+                          child: Text(
+                            "Next",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE91E63),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 12,
-                      ),
-                      elevation: 6,
-                    ),
-                    child: Text(
-                      "Next",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -212,7 +255,6 @@ class _SetupPage4State extends State<SetupPage4> {
     );
   }
 
-  // Reusable Expense Input Field
   Widget _buildExpenseInput(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),

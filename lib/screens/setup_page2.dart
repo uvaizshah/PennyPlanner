@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setup_page3.dart';
 
 class SetupPage2 extends StatefulWidget {
@@ -16,11 +18,12 @@ class _SetupPage2State extends State<SetupPage2> {
   List<TextEditingController> incomeSourceControllers = [];
   List<TextEditingController> incomeAmountControllers = [];
   double totalIncome = 0.0;
+  bool isLoading = false;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers based on numIncomeSources
     incomeSourceControllers = List.generate(
       widget.numIncomeSources,
       (index) => TextEditingController(),
@@ -52,6 +55,47 @@ class _SetupPage2State extends State<SetupPage2> {
     });
   }
 
+  Future<void> _saveIncomeData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("No user logged in");
+
+      List<Map<String, dynamic>> incomeSources = [];
+      for (int i = 0; i < widget.numIncomeSources; i++) {
+        incomeSources.add({
+          'source': incomeSourceControllers[i].text.trim(),
+          'amount': double.tryParse(incomeAmountControllers[i].text) ?? 0.0,
+        });
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'incomeSources': incomeSources,
+        'totalIncome': totalIncome,
+        'updatedAt': Timestamp.now(),
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SetupPage3(totalIncome: totalIncome),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error saving data: $e";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,7 +107,6 @@ class _SetupPage2State extends State<SetupPage2> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Lottie Animation with Debugging
                 SizedBox(
                   height: 200,
                   child: Lottie.asset(
@@ -86,7 +129,6 @@ class _SetupPage2State extends State<SetupPage2> {
                 ),
                 const SizedBox(height: 20),
 
-                // Title
                 Text(
                   "Let's Set Up Your Income Details!",
                   style: GoogleFonts.poppins(
@@ -98,7 +140,6 @@ class _SetupPage2State extends State<SetupPage2> {
                 ),
                 const SizedBox(height: 10),
 
-                // Subtitle
                 Text(
                   "Enter details to personalize your plan.",
                   style: GoogleFonts.poppins(
@@ -110,7 +151,6 @@ class _SetupPage2State extends State<SetupPage2> {
                 ),
                 const SizedBox(height: 30),
 
-                // Income Input Container
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -146,12 +186,12 @@ class _SetupPage2State extends State<SetupPage2> {
                             TextField(
                               controller: incomeSourceControllers[index],
                               decoration: InputDecoration(
-                                hintText: "Enter Source Name", // Updated hint text
+                                hintText: "Enter Source Name",
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 prefixIcon: Padding(
-                                  padding: const EdgeInsets.only(left: 12, right: 8, top: 4), // Added top padding to move emoji down
+                                  padding: const EdgeInsets.only(left: 12, right: 8, top: 4),
                                   child: Text(
                                     "💰",
                                     style: TextStyle(fontSize: 20),
@@ -199,7 +239,6 @@ class _SetupPage2State extends State<SetupPage2> {
                 ),
                 const SizedBox(height: 30),
 
-                // Total Income Display
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -238,7 +277,18 @@ class _SetupPage2State extends State<SetupPage2> {
                 ),
                 const SizedBox(height: 40),
 
-                // Navigation Buttons
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      errorMessage!,
+                      style: GoogleFonts.poppins(
+                        color: Colors.red,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -262,38 +312,33 @@ class _SetupPage2State extends State<SetupPage2> {
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SetupPage3(
-                              totalIncome: totalIncome,
+                    isLoading
+                        ? const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                          )
+                        : ElevatedButton(
+                            onPressed: _saveIncomeData,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE91E63),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                                vertical: 12,
+                              ),
+                              elevation: 6,
+                              shadowColor: const Color(0xFFE91E63).withOpacity(0.4),
+                            ),
+                            child: Text(
+                              "Next",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE91E63),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 12,
-                        ),
-                        elevation: 6,
-                        shadowColor: const Color(0xFFE91E63).withOpacity(0.4),
-                      ),
-                      child: Text(
-                        "Next",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 20),

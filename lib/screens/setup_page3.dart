@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setup_page4.dart';
 
 class SetupPage3 extends StatefulWidget {
@@ -14,6 +16,44 @@ class SetupPage3 extends StatefulWidget {
 
 class _SetupPage3State extends State<SetupPage3> {
   late TextEditingController _savingsController;
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future<void> _saveSavingsData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("No user logged in");
+
+      double savingsAmount = double.tryParse(_savingsController.text) ?? 0.0;
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'savingsAmount': savingsAmount,
+        'updatedAt': Timestamp.now(),
+      });
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SetupPage4(
+            totalIncome: widget.totalIncome,
+            savingsAmount: savingsAmount,
+          ),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        errorMessage = "Error saving data: $e";
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -43,11 +83,9 @@ class _SetupPage3State extends State<SetupPage3> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // **Piggy Bank Animation**
                       SizedBox(height: 180, child: Lottie.asset('assets/animations/Piggy Bank.json', fit: BoxFit.cover)),
                       const SizedBox(height: 15),
 
-                      // **Title**
                       Text(
                         "Plan Your Savings 💰",
                         style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
@@ -56,7 +94,6 @@ class _SetupPage3State extends State<SetupPage3> {
 
                       const SizedBox(height: 8),
 
-                      // **Subtitle**
                       Text(
                         "How much do you want to save?",
                         style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[700]),
@@ -65,7 +102,6 @@ class _SetupPage3State extends State<SetupPage3> {
 
                       const SizedBox(height: 15),
 
-                      // **Recommendation Box**
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -81,7 +117,6 @@ class _SetupPage3State extends State<SetupPage3> {
 
                       const SizedBox(height: 20),
 
-                      // **Savings Amount Input**
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
@@ -111,13 +146,23 @@ class _SetupPage3State extends State<SetupPage3> {
               ),
             ),
 
-            // **Navigation Buttons**
+            if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: Text(
+                  errorMessage!,
+                  style: GoogleFonts.poppins(
+                    color: Colors.red,
+                    fontSize: 14.0,
+                  ),
+                ),
+              ),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // **Back Button**
                   OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
@@ -134,36 +179,28 @@ class _SetupPage3State extends State<SetupPage3> {
                     ),
                   ),
 
-                  // **Next Button**
-                  ElevatedButton(
-                    onPressed: () {
-                      double savingsAmount = double.tryParse(_savingsController.text) ?? 0.0;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SetupPage4(
-                            totalIncome: widget.totalIncome,
-                            savingsAmount: savingsAmount,
+                  isLoading
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
+                        )
+                      : ElevatedButton(
+                          onPressed: _saveSavingsData,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE91E63),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            elevation: 6,
+                            shadowColor: const Color(0xFFE91E63).withOpacity(0.4),
+                          ),
+                          child: Text(
+                            "Next",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE91E63),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                      elevation: 6,
-                      shadowColor: const Color(0xFFE91E63).withOpacity(0.4),
-                    ),
-                    child: Text(
-                      "Next",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),

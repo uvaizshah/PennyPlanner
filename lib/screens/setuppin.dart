@@ -14,8 +14,20 @@ class SetupPin extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo Icon
-              const Icon(Icons.show_chart, color: Color(0xFFE91E63), size: 60.0),
+              // Custom Logo (ppPinkLogo.png)
+              Image.asset(
+                'assets/images/ppPinkLogo.png', // Updated path
+                height: 80.0, // Increased from 60.0 to 80.0
+                width: 80.0,  // Increased from 60.0 to 80.0
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.error,
+                    color: Colors.red,
+                    size: 50.0,
+                  ); // Fallback if image fails to load
+                },
+              ),
 
               const SizedBox(height: 16.0),
 
