@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final String category;
@@ -34,6 +36,71 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
+    }
+  }
+
+  // Function to save the expense to Firestore
+  Future<void> _saveExpense() async {
+    double amount = double.tryParse(_amountController.text) ?? 0.0;
+    if (amount <= 0 || amount > widget.remainingBudget) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid amount or exceeds remaining budget!")),
+      );
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final snapshot = await transaction.get(userDocRef);
+        if (!snapshot.exists) return;
+
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        Map<String, dynamic> expenses = (data['expenses'] as Map<String, dynamic>?) ?? {};
+        double currentSavingsAmount = (data['savingsAmount'] as num?)?.toDouble() ?? 0.0;
+        double currentTotalIncome = (data['totalIncome'] as num?)?.toDouble() ?? 0.0;
+
+        // Update category expense
+        String categoryKey = widget.category.toLowerCase();
+        double currentExpense = (expenses[categoryKey] as num?)?.toDouble() ?? 0.0;
+        expenses[categoryKey] = currentExpense + amount;
+
+        // Calculate new remaining balance
+        double totalExpenses = expenses.values.fold(0.0, (sum, value) => sum + (value as num).toDouble());
+        double newRemainingBalance = currentTotalIncome - totalExpenses - currentSavingsAmount;
+
+        transaction.update(userDocRef, {
+          'expenses': expenses,
+          'remainingBalance': newRemainingBalance,
+        });
+
+        // Add transaction to transactions subcollection
+        await userDocRef.collection('transactions').add({
+          'amount': amount,
+          'category': widget.category,
+          'type': 'expense',
+          'date': Timestamp.fromDate(DateTime.now()),
+        });
+      });
+
+      // Clear the form and navigate back
+      _amountController.clear();
+      setState(() {
+        _selectedImage = null;
+      });
+      Navigator.pop(context); // Return to CategoriesScreen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Expense added successfully!")),
+      );
+    } catch (e) {
+      print("Error saving expense: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error saving expense. Try again!")),
+      );
     }
   }
 
@@ -131,21 +198,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             const SizedBox(height: 30),
 
-            // Submit Button
+            // Submit Button (Changed to "Add Expense")
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Handle expense submission
-                  print("Expense: ₹${_amountController.text}, Category: ${widget.category}");
-                  Navigator.pop(context); // Close page after submission
-                },
+                onPressed: _saveExpense,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFE91E63),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                 ),
-                child: const Text("Enter", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                child: const Text("Add Expense", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
               ),
             ),
           ],

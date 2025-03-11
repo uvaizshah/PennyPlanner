@@ -35,19 +35,22 @@ class SetupPage5 extends StatelessWidget {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("No user logged in");
 
+      // Define the categories map with allocated budgets and initial expenses
+      Map<String, Map<String, double>> categories = {
+        'food': {'allocatedBudget': food, 'expense': 0.0},
+        'transport': {'allocatedBudget': transport, 'expense': 0.0},
+        'groceries': {'allocatedBudget': groceries, 'expense': 0.0},
+        'rent': {'allocatedBudget': rent, 'expense': 0.0},
+        'healthcare': {'allocatedBudget': healthcare, 'expense': 0.0},
+        'entertainment': {'allocatedBudget': entertainment, 'expense': 0.0},
+        'gift': {'allocatedBudget': gift, 'expense': 0.0},
+        'other': {'allocatedBudget': other, 'expense': 0.0},
+      };
+
+      // Update Firestore with the new structure
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'totalIncome': totalIncome,
-        'savingsAmount': savingsAmount,
-        'expenses': {
-          'rent': rent,
-          'food': food,
-          'groceries': groceries,
-          'transport': transport,
-          'healthcare': healthcare,
-          'entertainment': entertainment,
-          'gift': gift,
-          'other': other,
-        },
+        'categories': categories,
         'updatedAt': Timestamp.now(),
       });
 
@@ -74,7 +77,6 @@ class SetupPage5 extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-
                 Text(
                   "Review Your Setup",
                   style: GoogleFonts.poppins(
@@ -84,9 +86,7 @@ class SetupPage5 extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   "Here’s a summary of your financial setup.",
                   style: GoogleFonts.poppins(
@@ -95,9 +95,7 @@ class SetupPage5 extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 25),
-
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -128,9 +126,7 @@ class SetupPage5 extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -172,7 +168,6 @@ class SetupPage5 extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 20),
               ],
             ),
