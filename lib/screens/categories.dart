@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'add_expense.dart'; // Import the Add Expense Page
+import 'add_expense.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -11,9 +11,7 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  int _selectedIndex = 0; // Retained for potential future use
-  Map<String, double> expenseData = {}; // Store expense amounts
-  double totalIncome = 0.0; // To calculate proportional budgets
+  Map<String, Map<String, double>> categoriesData = {};
 
   @override
   void initState() {
@@ -32,9 +30,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         if (userDoc.exists) {
           print("Category data fetched: ${userDoc.data()}");
           setState(() {
-            totalIncome = (userDoc['totalIncome'] as num?)?.toDouble() ?? 0.0;
-            Map<String, dynamic>? expenses = userDoc['expenses'] as Map<String, dynamic>?;
-            expenseData = expenses?.map((key, value) => MapEntry(key, (value as num?)?.toDouble() ?? 0.0)) ?? {};
+            Map<String, dynamic>? categories = userDoc['categories'] as Map<String, dynamic>?;
+            categoriesData = categories?.map((key, value) => MapEntry(key, {
+              'allocatedBudget': (value['allocatedBudget'] as num?)?.toDouble() ?? 0.0,
+              'expense': (value['expense'] as num?)?.toDouble() ?? 0.0,
+            })) ?? {};
           });
         }
       } catch (e) {
@@ -62,9 +62,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
-            onPressed: () {
-              // TODO: Notification Functionality
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -79,17 +77,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
           itemCount: categoryItems.length,
           itemBuilder: (context, index) {
-            String label = categoryItems[index]["label"].toLowerCase();
-            double expense = expenseData[label] ?? 0.0;
-            // Temporary: Assume allocated budget is proportional to totalIncome (e.g., 1/8th each category)
-            double allocatedBudget = totalIncome > 0 ? totalIncome / 8 : 0.0;
+            String firestoreKey = categoryItems[index]["firestoreKey"];
+            double allocatedBudget = categoriesData[firestoreKey]?['allocatedBudget'] ?? 0.0;
+            double expense = categoriesData[firestoreKey]?['expense'] ?? 0.0;
             double remainingBudget = allocatedBudget - expense;
 
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  _selectedIndex = index; // Retained for potential future use
-                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -103,7 +97,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               child: CategoryItem(
                 icon: categoryItems[index]["icon"],
                 label: categoryItems[index]["label"],
-                isSelected: _selectedIndex == index, // Retained but not affecting color
               ),
             );
           },
@@ -116,16 +109,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 class CategoryItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  final bool isSelected; // Retained but not affecting color
 
-  const CategoryItem({super.key, required this.icon, required this.label, this.isSelected = false});
+  const CategoryItem({super.key, required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: const Color(0xFFE91E63), // All buttons now #E91E63
+        color: const Color(0xFFE91E63),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -144,13 +136,12 @@ class CategoryItem extends StatelessWidget {
 }
 
 final List<Map<String, dynamic>> categoryItems = [
-  {"icon": Icons.restaurant, "label": "Food"},
-  {"icon": Icons.directions_bus, "label": "Transport"},
-  {"icon": Icons.medical_services, "label": "Medicine"},
-  {"icon": Icons.local_grocery_store, "label": "Groceries"},
-  {"icon": Icons.key, "label": "Rent"},
-  {"icon": Icons.card_giftcard, "label": "Gifts"},
-  {"icon": Icons.savings, "label": "Savings"},
-  {"icon": Icons.movie, "label": "Entertainment"},
-  {"icon": Icons.add, "label": "More"},
+  {"icon": Icons.restaurant, "label": "Food", "firestoreKey": "food"},
+  {"icon": Icons.directions_bus, "label": "Transport", "firestoreKey": "transport"},
+  {"icon": Icons.medical_services, "label": "Medicine", "firestoreKey": "healthcare"},
+  {"icon": Icons.local_grocery_store, "label": "Groceries", "firestoreKey": "groceries"},
+  {"icon": Icons.key, "label": "Rent", "firestoreKey": "rent"},
+  {"icon": Icons.card_giftcard, "label": "Gifts", "firestoreKey": "gift"},
+  {"icon": Icons.movie, "label": "Entertainment", "firestoreKey": "entertainment"},
+  {"icon": Icons.add, "label": "Other", "firestoreKey": "other"},
 ];

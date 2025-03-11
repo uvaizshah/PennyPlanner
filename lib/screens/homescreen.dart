@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'analysis.dart';
 import 'categories.dart';
 import 'profile.dart';
-import 'login_screen.dart'; // Assuming LoginScreen exists
+import 'login_screen.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 void main() {
@@ -120,12 +120,24 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       (snapshot['fullName'] as String?)?.split(' ').last ??
                       "User";
                   totalIncome = (snapshot['totalIncome'] as num?)?.toDouble() ?? 0.0;
-                  Map<String, dynamic>? oldExpenses = snapshot['expenses'] as Map<String, dynamic>?;
-                  totalExpense = oldExpenses != null
-                      ? oldExpenses.values.fold(0.0, (sum, value) => sum + ((value is num) ? value.toDouble() : 0.0))
+                  double savingsAmount = (snapshot['savingsAmount'] as num?)?.toDouble() ?? 0.0;
+                  Map<String, dynamic>? categories = snapshot['categories'] as Map<String, dynamic>?;
+                  totalExpense = categories != null
+                      ? categories.values.fold(0.0, (sum, cat) {
+                          if (cat is Map<String, dynamic>) {
+                            return sum + ((cat['expense'] as num?)?.toDouble() ?? 0.0);
+                          }
+                          return sum;
+                        })
                       : 0.0;
-                  balance = totalIncome - totalExpense;
+                  balance = totalIncome - savingsAmount - totalExpense;
                   print("State updated - surname: $surname, totalIncome: $totalIncome, totalExpense: $totalExpense, balance: $balance");
+
+                  FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+                    'remainingBalance': balance,
+                  }).catchError((error) {
+                    print("Failed to update remainingBalance: $error");
+                  });
                 });
               } catch (e) {
                 print("Error processing snapshot data: $e");
@@ -150,13 +162,11 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
 
     return SafeArea(
       child: Container(
-        // Keep the app's background as #E91E63
         color: const Color(0xFFE91E63),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting Section
               Padding(
                 padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 10.0),
                 child: Row(
@@ -166,7 +176,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Hey, $surname",
+                          "Hey, $surname 👋",
                           style: GoogleFonts.poppins(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -184,24 +194,21 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.notifications, color: Colors.white, size: 30),
-                      onPressed: () {
-                        // TODO: Navigate to Notifications Page
-                      },
+                      onPressed: () {},
                     ),
                   ],
                 ),
               ),
-              // Box for Balance and Total Expense (changed to solid white)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                 child: Container(
                   padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
-                    color: Colors.white, // Changed to solid white
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1), // Subtle shadow for depth
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -220,7 +227,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 "Balance",
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
-                                  color: Colors.black, // Changed to black
+                                  color: Colors.black,
                                 ),
                               ),
                               Text(
@@ -228,7 +235,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black, // Changed to black
+                                  color: Colors.black,
                                 ),
                               ),
                             ],
@@ -240,7 +247,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 "Total Expense",
                                 style: GoogleFonts.poppins(
                                   fontSize: 16,
-                                  color: Colors.black, // Changed to black
+                                  color: Colors.black,
                                 ),
                               ),
                               Text(
@@ -248,7 +255,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFFF1744), // Neon red (still visible against white)
+                                  color: const Color(0xFFFF1744),
                                 ),
                               ),
                             ],
@@ -263,7 +270,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               text: "Original Total Monthly Income: ",
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.black, // Changed to black
+                                color: Colors.black,
                               ),
                             ),
                             TextSpan(
@@ -271,7 +278,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF00E676), // Neon green (still visible against white)
+                                color: const Color(0xFF00E676),
                               ),
                             ),
                           ],
@@ -281,7 +288,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       LinearProgressIndicator(
                         value: expensePercentage,
                         backgroundColor: Colors.grey[200],
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)), // Original pink (visible against white)
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
                         minHeight: 8,
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -290,7 +297,157 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                         "${(expensePercentage * 100).toStringAsFixed(0)}% of your income spent",
                         style: GoogleFonts.poppins(
                           fontSize: 14,
-                          color: Colors.black, // Changed to black
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: Container(
+                  padding: const EdgeInsets.all(20.0),
+                  constraints: BoxConstraints(
+                    minHeight: 250,
+                    maxWidth: MediaQuery.of(context).size.width - 40,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.grey.shade200, width: 1),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.receipt, color: Color(0xFFE91E63), size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Recent Transactions",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: Text(
+                              "See All",
+                              style: GoogleFonts.poppins(color: Color(0xFFE91E63)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      Container(
+                        height: 200,
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser?.uid)
+                              .collection('transactions')
+                              .orderBy('date', descending: true)
+                              .limit(5)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            if (snapshot.hasError) {
+                              return Text(
+                                "Error loading transactions",
+                                style: GoogleFonts.poppins(color: Colors.black54),
+                              );
+                            }
+                            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  "No transactions yet",
+                                  style: GoogleFonts.poppins(color: Colors.grey[400], fontSize: 16),
+                                ),
+                              );
+                            }
+
+                            final transactions = snapshot.data!.docs;
+
+                            return ListView.builder(
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: transactions.length,
+                              itemBuilder: (context, index) {
+                                final transaction = transactions[index].data() as Map<String, dynamic>;
+                                final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+                                final category = transaction['category'] as String? ?? "Unknown";
+                                final date = (transaction['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+
+                                String emoji = _getCategoryEmoji(category);
+
+                                return Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Flexible(
+                                                      child: Text(
+                                                        "$category $emoji",
+                                                        style: GoogleFonts.poppins(fontSize: 16, color: Colors.black),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Text(
+                                                  "${date.day} ${date.monthName} ${date.year}, ${date.hour}:${date.minute.toString().padLeft(2, '0')}",
+                                                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Text(
+                                            "-₹${amount.toStringAsFixed(2)}",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              color: const Color(0xFFFF1744),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (index < transactions.length - 1)
+                                      Divider(
+                                        color: Colors.grey[300],
+                                        thickness: 0.5,
+                                        height: 20,
+                                      ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -315,5 +472,29 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
     } else {
       return "Good Night";
     }
+  }
+
+  String _getCategoryEmoji(String category) {
+    final categoryMap = {
+      'food': '🍽️',
+      'transport': '🚌',
+      'groceries': '🥕',
+      'rent': '🏠',
+      'healthcare': '🏥',
+      'entertainment': '🎬',
+      'gift': '🎁',
+      'other': '📌',
+    };
+    return categoryMap[category.toLowerCase()] ?? "📌";
+  }
+}
+
+extension DateOnly on DateTime {
+  String get monthName {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
   }
 }

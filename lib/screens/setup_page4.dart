@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setup_page5.dart';
 
 class SetupPage4 extends StatefulWidget {
@@ -28,33 +26,13 @@ class _SetupPage4State extends State<SetupPage4> {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<void> _saveExpenseData() async {
+  void _proceedToNextPage() {
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception("No user logged in");
-
-      final expenses = {
-        'rent': double.tryParse(rentController.text) ?? 0.0,
-        'food': double.tryParse(foodController.text) ?? 0.0,
-        'groceries': double.tryParse(groceriesController.text) ?? 0.0,
-        'transport': double.tryParse(transportController.text) ?? 0.0,
-        'healthcare': double.tryParse(healthcareController.text) ?? 0.0,
-        'entertainment': double.tryParse(entertainmentController.text) ?? 0.0,
-        'gift': double.tryParse(giftController.text) ?? 0.0,
-        'other': double.tryParse(otherController.text) ?? 0.0,
-      };
-
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'expenses': expenses,
-        'remainingBalance': remainingBalance,
-        'updatedAt': Timestamp.now(),
-      });
-
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -74,7 +52,7 @@ class _SetupPage4State extends State<SetupPage4> {
       );
     } catch (e) {
       setState(() {
-        errorMessage = "Error saving data: $e";
+        errorMessage = "Error navigating: $e";
       });
     } finally {
       setState(() {
@@ -98,21 +76,21 @@ class _SetupPage4State extends State<SetupPage4> {
   }
 
   void updateRemainingBalance() {
-    double totalExpenses = 0.0;
-    totalExpenses += double.tryParse(rentController.text) ?? 0.0;
-    totalExpenses += double.tryParse(foodController.text) ?? 0.0;
-    totalExpenses += double.tryParse(groceriesController.text) ?? 0.0;
-    totalExpenses += double.tryParse(transportController.text) ?? 0.0;
-    totalExpenses += double.tryParse(healthcareController.text) ?? 0.0;
-    totalExpenses += double.tryParse(entertainmentController.text) ?? 0.0;
-    totalExpenses += double.tryParse(giftController.text) ?? 0.0;
-    totalExpenses += double.tryParse(otherController.text) ?? 0.0;
+    double totalAllocated = 0.0;
+    totalAllocated += double.tryParse(rentController.text) ?? 0.0;
+    totalAllocated += double.tryParse(foodController.text) ?? 0.0;
+    totalAllocated += double.tryParse(groceriesController.text) ?? 0.0;
+    totalAllocated += double.tryParse(transportController.text) ?? 0.0;
+    totalAllocated += double.tryParse(healthcareController.text) ?? 0.0;
+    totalAllocated += double.tryParse(entertainmentController.text) ?? 0.0;
+    totalAllocated += double.tryParse(giftController.text) ?? 0.0;
+    totalAllocated += double.tryParse(otherController.text) ?? 0.0;
 
     setState(() {
-      remainingBalance = widget.totalIncome - widget.savingsAmount - totalExpenses;
+      remainingBalance = widget.totalIncome - widget.savingsAmount - totalAllocated;
       if (remainingBalance < 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Expenses exceed remaining balance!")),
+          const SnackBar(content: Text("Allocated budgets exceed available balance!")),
         );
       }
     });
@@ -228,7 +206,7 @@ class _SetupPage4State extends State<SetupPage4> {
                           valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE91E63)),
                         )
                       : ElevatedButton(
-                          onPressed: _saveExpenseData,
+                          onPressed: _proceedToNextPage,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE91E63),
                             shape: RoundedRectangleBorder(

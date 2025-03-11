@@ -35,7 +35,6 @@ class SetupPage5 extends StatelessWidget {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("No user logged in");
 
-      // Define the categories map with allocated budgets and initial expenses
       Map<String, Map<String, double>> categories = {
         'food': {'allocatedBudget': food, 'expense': 0.0},
         'transport': {'allocatedBudget': transport, 'expense': 0.0},
@@ -47,9 +46,9 @@ class SetupPage5 extends StatelessWidget {
         'other': {'allocatedBudget': other, 'expense': 0.0},
       };
 
-      // Update Firestore with the new structure
       await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'totalIncome': totalIncome,
+        'savingsAmount': savingsAmount,
         'categories': categories,
         'updatedAt': Timestamp.now(),
       });

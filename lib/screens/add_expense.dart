@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,7 +20,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
-  // Function to pick an image from the gallery
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -29,7 +29,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  // Function to take a photo using the camera
   Future<void> _captureImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.camera);
     if (pickedFile != null) {
@@ -39,7 +38,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
   }
 
-  // Function to save the expense to Firestore
   Future<void> _saveExpense() async {
     double amount = double.tryParse(_amountController.text) ?? 0.0;
     if (amount <= 0 || amount > widget.remainingBudget) {
@@ -60,25 +58,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         if (!snapshot.exists) return;
 
         Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
-        Map<String, dynamic> expenses = (data['expenses'] as Map<String, dynamic>?) ?? {};
+        Map<String, dynamic> categories = (data['categories'] as Map<String, dynamic>?) ?? {};
         double currentSavingsAmount = (data['savingsAmount'] as num?)?.toDouble() ?? 0.0;
         double currentTotalIncome = (data['totalIncome'] as num?)?.toDouble() ?? 0.0;
 
-        // Update category expense
         String categoryKey = widget.category.toLowerCase();
-        double currentExpense = (expenses[categoryKey] as num?)?.toDouble() ?? 0.0;
-        expenses[categoryKey] = currentExpense + amount;
+        Map<String, dynamic> categoryData = categories[categoryKey] ?? {'allocatedBudget': 0.0, 'expense': 0.0};
+        double currentExpense = categoryData['expense'] as double? ?? 0.0;
+        categoryData['expense'] = currentExpense + amount;
+        categories[categoryKey] = categoryData;
 
-        // Calculate new remaining balance
-        double totalExpenses = expenses.values.fold(0.0, (sum, value) => sum + (value as num).toDouble());
-        double newRemainingBalance = currentTotalIncome - totalExpenses - currentSavingsAmount;
+        double totalExpenses = categories.values.fold(0.0, (sum, cat) => sum + (cat['expense'] as double? ?? 0.0));
+        double newRemainingBalance = currentTotalIncome - currentSavingsAmount - totalExpenses;
 
         transaction.update(userDocRef, {
-          'expenses': expenses,
+          'categories': categories,
           'remainingBalance': newRemainingBalance,
         });
 
-        // Add transaction to transactions subcollection
         await userDocRef.collection('transactions').add({
           'amount': amount,
           'category': widget.category,
@@ -87,12 +84,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         });
       });
 
-      // Clear the form and navigate back
       _amountController.clear();
       setState(() {
         _selectedImage = null;
       });
-      Navigator.pop(context); // Return to CategoriesScreen
+      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Expense added successfully!")),
       );
@@ -113,105 +109,147 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          widget.category, // Display selected category name
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          widget.category,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context); // Navigate back
+            Navigator.pop(context);
           },
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Remaining Budget Display
-            Container(
-              padding: const EdgeInsets.all(15),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: Colors.grey.shade300, blurRadius: 5, spreadRadius: 2),
-                ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      "Remaining Budget",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "₹${widget.remainingBudget.toStringAsFixed(2)}",
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  const Text(
-                    "Remaining Budget",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+              const SizedBox(height: 30),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.photo, color: Colors.white),
+                      label: Text(
+                        "Upload Bill",
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE91E63),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton.icon(
+                      onPressed: _captureImage,
+                      icon: const Icon(Icons.camera_alt, color: Colors.white),
+                      label: Text(
+                        "Scan Bill",
+                        style: GoogleFonts.poppins(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE91E63),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_selectedImage != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(_selectedImage!, height: 150, fit: BoxFit.cover),
+                    ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    "₹ ${widget.remainingBudget.toStringAsFixed(2)}",
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+              const SizedBox(height: 30),
+              Text(
+                "Enter Amount",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: "Enter expense amount",
+                  prefixIcon: Container(
+                    width: 40,
+                    alignment: Alignment.center,
+                    child: Text(
+                      '₹',
+                      style: GoogleFonts.poppins(fontSize: 20, color: Color(0xFFE91E63)),
+                    ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Photo Upload & Camera Options
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Upload from Gallery
-                IconButton(
-                  icon: const Icon(Icons.photo, size: 40, color: Color(0xFFE91E63)),
-                  onPressed: _pickImage,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
-                // Capture from Camera
-                IconButton(
-                  icon: const Icon(Icons.camera_alt, size: 40, color: Color(0xFFE91E63)),
-                  onPressed: _captureImage,
-                ),
-              ],
-            ),
-
-            // Display Selected Image
-            if (_selectedImage != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Center(
-                  child: Image.file(_selectedImage!, height: 100, fit: BoxFit.cover),
+                style: GoogleFonts.poppins(fontSize: 16),
+              ),
+              const SizedBox(height: 40),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _saveExpense,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE91E63),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 5,
+                  ),
+                  child: Text(
+                    "Add Expense",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
-
-            const SizedBox(height: 25),
-
-            // Amount Entry Field
-            const Text("Enter Amount", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: "₹ Enter expense amount",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Submit Button (Changed to "Add Expense")
-            Center(
-              child: ElevatedButton(
-                onPressed: _saveExpense,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE91E63),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                ),
-                child: const Text("Add Expense", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
