@@ -89,54 +89,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            // Total Budget Summary in a curved box
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[100], // Light gray background
-                borderRadius: BorderRadius.circular(20), // Curved corners
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Total Allocated: ₹${totalAllocated.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black, // Neutral color
-                    ),
-                  ),
-                  const SizedBox(height: 8), // Spacing between items
-                  Text(
-                    "Total Expense: ₹${totalExpense.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      fontSize:  долго16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red, // Expense in red
-                    ),
-                  ),
-                  const SizedBox(height: 8), // Spacing between items
-                  Text(
-                    "Total Remaining: ₹${totalRemaining.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green, // Remaining in green
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 20), // Moves title down slightly
             Text(
               "Category-wise Analysis",
               style: GoogleFonts.poppins(
@@ -151,6 +104,32 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Total Budget Summary
+            Text(
+              "Total Allocated: ₹${totalAllocated.toStringAsFixed(2)}",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              "Total Expense: ₹${totalExpense.toStringAsFixed(2)}",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.red, // Changed to red
+              ),
+            ),
+            Text(
+              "Total Remaining: ₹${totalRemaining.toStringAsFixed(2)}",
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.green, // Changed to green
               ),
             ),
             const SizedBox(height: 20),
@@ -266,7 +245,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                                   textAlign: TextAlign.end,
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color: textColor,
+                                    color: textColor, // Changed to match allocated text color
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -278,7 +257,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                             value: progress,
                             backgroundColor: Colors.grey[200],
                             valueColor:
-                                const AlwaysStoppedAnimation<Color>(Colors.red), // Progress bar in red
+                                const AlwaysStoppedAnimation<Color>(Colors.red), // Changed to red
                             minHeight: 8,
                             borderRadius: BorderRadius.circular(4),
                           ),

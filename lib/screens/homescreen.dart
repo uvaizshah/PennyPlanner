@@ -477,13 +477,13 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   String _getCategoryEmoji(String category) {
     final categoryMap = {
       'food': '🍽️',
-      'transport': '🚌',
-      'groceries': '🥕',
+      'transport': '🚗',
+      'groceries': '🏪',
       'rent': '🏠',
-      'healthcare': '🏥',
-      'entertainment': '🎬',
-      'gift': '🎁',
-      'other': '📌',
+      'medicine': '⚕️',
+      'entertainment': '🎉',
+      'gifts': '🎁',
+      'other': '📦',
     };
     return categoryMap[category.toLowerCase()] ?? "📌";
   }
