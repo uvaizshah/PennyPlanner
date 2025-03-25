@@ -6,10 +6,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  final String category;
+  final String label;
+  final String firestoreKey;
   final double remainingBudget;
 
-  const AddExpenseScreen({super.key, required this.category, required this.remainingBudget});
+  const AddExpenseScreen({
+    super.key,
+    required this.label,
+    required this.firestoreKey,
+    required this.remainingBudget,
+  });
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -62,7 +68,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         double currentSavingsAmount = (data['savingsAmount'] as num?)?.toDouble() ?? 0.0;
         double currentTotalIncome = (data['totalIncome'] as num?)?.toDouble() ?? 0.0;
 
-        String categoryKey = widget.category.toLowerCase();
+        String categoryKey = widget.firestoreKey;
         Map<String, dynamic> categoryData = categories[categoryKey] ?? {'allocatedBudget': 0.0, 'expense': 0.0};
         double currentExpense = categoryData['expense'] as double? ?? 0.0;
         categoryData['expense'] = currentExpense + amount;
@@ -78,7 +84,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
         await userDocRef.collection('transactions').add({
           'amount': amount,
-          'category': widget.category,
+          'category': widget.label,
           'type': 'expense',
           'date': Timestamp.fromDate(DateTime.now()),
         });
@@ -109,7 +115,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          widget.category,
+          widget.label,
           style: GoogleFonts.poppins(
             color: Colors.white,
             fontSize: 20,

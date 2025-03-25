@@ -47,18 +47,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       if (normalizedKey == 'healthcare' || normalizedKey == 'medicine') {
         if (mergedCategories.containsKey('medicine')) {
           mergedCategories['medicine']['allocatedBudget'] =
-              (mergedCategories['medicine']['allocatedBudget'] ?? 0.0) + (value['allocatedBudget'] ?? 0.0);
+              (mergedCategories['medicine']['allocatedBudget'] ?? 0.0) +
+                  (value['allocatedBudget'] ?? 0.0);
           mergedCategories['medicine']['expense'] =
-              (mergedCategories['medicine']['expense'] ?? 0.0) + (value['expense'] ?? 0.0);
+              (mergedCategories['medicine']['expense'] ?? 0.0) +
+                  (value['expense'] ?? 0.0);
         } else {
           mergedCategories['medicine'] = Map<String, dynamic>.from(value);
         }
       } else if (normalizedKey == 'gift' || normalizedKey == 'gifts') {
         if (mergedCategories.containsKey('gifts')) {
           mergedCategories['gifts']['allocatedBudget'] =
-              (mergedCategories['gifts']['allocatedBudget'] ?? 0.0) + (value['allocatedBudget'] ?? 0.0);
+              (mergedCategories['gifts']['allocatedBudget'] ?? 0.0) +
+                  (value['allocatedBudget'] ?? 0.0);
           mergedCategories['gifts']['expense'] =
-              (mergedCategories['gifts']['expense'] ?? 0.0) + (value['expense'] ?? 0.0);
+              (mergedCategories['gifts']['expense'] ?? 0.0) +
+                  (value['expense'] ?? 0.0);
         } else {
           mergedCategories['gifts'] = Map<String, dynamic>.from(value);
         }
@@ -66,15 +70,73 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         mergedCategories[key] = value;
       }
     });
-    
+
+    // Calculate totals for summary
+    double totalAllocated = 0.0;
+    double totalExpense = 0.0;
+    mergedCategories.forEach((key, value) {
+      totalAllocated += value['allocatedBudget'] ?? 0.0;
+      totalExpense += value['expense'] ?? 0.0;
+    });
+    double totalRemaining = totalAllocated - totalExpense;
+
     return Scaffold(
       appBar: null,
       backgroundColor: Colors.white,
       body: Padding(
-        padding: const EdgeInsets.only(top: 50.0, left: 16.0, right: 16.0, bottom: 16.0),
+        padding: const EdgeInsets.only(
+            top: 50.0, left: 16.0, right: 16.0, bottom: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 20),
+            // Total Budget Summary in a curved box
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.grey[100], // Light gray background
+                borderRadius: BorderRadius.circular(20), // Curved corners
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Total Allocated: ₹${totalAllocated.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black, // Neutral color
+                    ),
+                  ),
+                  const SizedBox(height: 8), // Spacing between items
+                  Text(
+                    "Total Expense: ₹${totalExpense.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(
+                      fontSize:  долго16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red, // Expense in red
+                    ),
+                  ),
+                  const SizedBox(height: 8), // Spacing between items
+                  Text(
+                    "Total Remaining: ₹${totalRemaining.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green, // Remaining in green
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               "Category-wise Analysis",
               style: GoogleFonts.poppins(
@@ -129,10 +191,13 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                   double allocatedBudget = catData['allocatedBudget'] ?? 0.0;
                   double expense = catData['expense'] ?? 0.0;
                   double remaining = allocatedBudget - expense;
-                  double progress = allocatedBudget != 0 ? (expense / allocatedBudget) : 0.0;
+                  double progress =
+                      allocatedBudget != 0 ? (expense / allocatedBudget) : 0.0;
 
                   Color textColor = Colors.white;
-                  if (key.toLowerCase() == 'food' || key.toLowerCase() == 'medicine' || key.toLowerCase() == 'gifts') {
+                  if (key.toLowerCase() == 'food' ||
+                      key.toLowerCase() == 'medicine' ||
+                      key.toLowerCase() == 'gifts') {
                     textColor = Colors.black;
                   }
 
@@ -155,10 +220,22 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 6, horizontal: 10),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              gradient: LinearGradient(
+                                colors: [Colors.white, Colors.grey[200]!],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                               borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               "$emoji  $displayCategory",
@@ -200,7 +277,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                           LinearProgressIndicator(
                             value: progress,
                             backgroundColor: Colors.grey[200],
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                            valueColor:
+                                const AlwaysStoppedAnimation<Color>(Colors.red), // Progress bar in red
                             minHeight: 8,
                             borderRadius: BorderRadius.circular(4),
                           ),

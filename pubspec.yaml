@@ -41,6 +41,7 @@ flutter:
     - assets/images/ppWhiteLogo.png
     - assets/animations/setup_intro.json
     - assets/animations/Piggy Bank.json
+    - assets/animations/splitfriends.json  # Consistent with other animations
 
   fonts:
     - family: Poppins

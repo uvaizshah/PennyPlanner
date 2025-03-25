@@ -354,7 +354,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                         ],
                       ),
                       const SizedBox(height: 15),
-                      Container(
+                      SizedBox(
                         height: 200,
                         child: StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
