@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:lottie/lottie.dart';
 
 class SplitTheBillScreen extends StatefulWidget {
+  const SplitTheBillScreen({super.key});
+
   @override
   _SplitTheBillScreenState createState() => _SplitTheBillScreenState();
 }
@@ -13,13 +15,17 @@ class _SplitTheBillScreenState extends State<SplitTheBillScreen> {
   final List<TextEditingController> _nameControllers = [];
   final List<TextEditingController> _expenseControllers = [];
   int _numberOfPeople = 0;
-  List<String> _transactions = [];
+  final List<String> _transactions = [];
 
   @override
   void dispose() {
     _peopleController.dispose();
-    _nameControllers.forEach((controller) => controller.dispose());
-    _expenseControllers.forEach((controller) => controller.dispose());
+    for (var controller in _nameControllers) {
+      controller.dispose();
+    }
+    for (var controller in _expenseControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -160,7 +166,7 @@ class _SplitTheBillScreenState extends State<SplitTheBillScreen> {
                   ),
                 ),
                 SizedBox(height: 24),
-                Container(
+                SizedBox(
                   height: 200,
                   child: Lottie.asset('assets/animations/splitfriends.json'),
                 ),
